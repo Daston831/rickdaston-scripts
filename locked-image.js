@@ -7,7 +7,7 @@ class LockedImage extends HTMLElement {
     const SWITCH_DELAY_MS = 10 * 1000; // 10 seconds
 
     const frame = document.createElement("iframe");
-    frame.style.width = "50%";
+    frame.style.width = "100%";
     frame.style.height = "600px"; // adjust height as needed
     frame.style.border = "none";
     this.appendChild(frame);
