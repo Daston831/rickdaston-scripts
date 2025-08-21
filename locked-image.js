@@ -3,11 +3,11 @@ class LockedImage extends HTMLElement {
     const tempUrl = this.getAttribute("temp");
     const finalUrl = this.getAttribute("final");
     const KEY_LOCK_UNTIL = "rd_lock_until_v3";
-    const LOCK_MS = 10 * 60 * 1000; // 10 minutes
+    const LOCK_MS = 10 * 1000; // 10 seconds
     const SWITCH_DELAY_MS = 10 * 1000; // 10 seconds
 
     const frame = document.createElement("iframe");
-    frame.style.width = "100%";
+    frame.style.width = "50%";
     frame.style.height = "600px"; // adjust height as needed
     frame.style.border = "none";
     this.appendChild(frame);
