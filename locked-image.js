@@ -6,10 +6,11 @@ class LockedImage extends HTMLElement {
     const LOCK_MS = 10 * 60 * 1000; // 10 minutes
     const SWITCH_DELAY_MS = 10 * 1000; // 10 seconds
 
-    const img = document.createElement("img");
-    img.style.maxWidth = "100%";
-    img.style.height = "auto";
-    this.appendChild(img);
+    const frame = document.createElement("iframe");
+    frame.style.width = "100%";
+    frame.style.height = "600px"; // adjust height as needed
+    frame.style.border = "none";
+    this.appendChild(frame);
 
     function now() { return Date.now(); }
     function getLockUntil() {
@@ -20,26 +21,21 @@ class LockedImage extends HTMLElement {
       localStorage.setItem(KEY_LOCK_UNTIL, String(now() + ms));
     }
     function showFinal() {
-      img.src = finalUrl;
+      frame.src = finalUrl;
     }
 
     if (getLockUntil() > now()) {
-      // Still in lock window → show final immediately
+      // Still locked → show final immediately
       showFinal();
     } else {
       // Not locked → show temp first, then swap after 10s
-      img.src = tempUrl;
+      frame.src = tempUrl;
       setTimeout(() => {
-        const preload = new Image();
-        preload.onload = () => {
-          showFinal();
-          setLockFor(LOCK_MS);
-        };
-        preload.src = finalUrl;
+        showFinal();
+        setLockFor(LOCK_MS);
       }, SWITCH_DELAY_MS);
     }
   }
 }
 
-// Register custom <locked-image> tag
-customElements.define("locked-image", LockedImage);
+customElements.define("locked-image", LockedImage);;
