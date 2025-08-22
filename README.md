@@ -39,4 +39,3 @@ class LockedImage extends HTMLElement {
 }
 
 customElements.define("locked-image", LockedImage);
-customElements.define("locked-image", LockedImage);
