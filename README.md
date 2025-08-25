@@ -2,59 +2,51 @@ class LockedImage extends HTMLElement {
   connectedCallback() {
     const tempUrl = this.getAttribute("temp");
     const finalUrl = this.getAttribute("final");
-    const iframeHeight = this.getAttribute("iframe-height") || "500px"; // default height
-
-    const lockKey = "lockedImageTimestamp";
+    const autoResize = this.hasAttribute("auto-resize");
+    const lockKey = "locked-image-unlock-time";
     const lockDuration = 10 * 60 * 1000; // 10 minutes
 
+    const now = Date.now();
+    const unlockTime = localStorage.getItem(lockKey);
+
+    // Create container
     const container = document.createElement("div");
+    container.style.position = "relative";
     container.style.width = "100%";
-    container.style.maxWidth = "600px"; // adjust as needed
-    container.style.margin = "0 auto";
+    container.style.height = "100%";
+
+    const iframe = document.createElement("iframe");
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+
+    // Decide whether to show temp or final
+    if (unlockTime && now < parseInt(unlockTime, 10)) {
+      iframe.src = finalUrl;
+    } else {
+      iframe.src = tempUrl;
+
+      // Start 10 minute lock countdown
+      localStorage.setItem(lockKey, now + lockDuration);
+
+      // After 10 minutes, switch to final
+      setTimeout(() => {
+        iframe.src = finalUrl;
+      }, lockDuration);
+    }
+
+    container.appendChild(iframe);
     this.appendChild(container);
 
-    const now = Date.now();
-    const savedTime = localStorage.getItem(lockKey);
-
-    if (savedTime && now - savedTime < lockDuration) {
-      this.loadContent(container, finalUrl, iframeHeight); // locked → show final
-    } else {
-      localStorage.setItem(lockKey, now);
-      this.loadContent(container, tempUrl, iframeHeight); // show temp
-      setTimeout(() => this.loadContent(container, finalUrl, iframeHeight), 10000); // switch after 10s
-    }
-  }
-
-  async loadContent(container, url, iframeHeight) {
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      const contentType = response.headers.get("content-type") || "";
-
-      container.innerHTML = "";
-
-      if (contentType.includes("image")) {
-        // Show as <img>
-        const img = document.createElement("img");
-        img.src = url;
-        img.style.maxWidth = "100%";
-        img.style.height = "auto";
-        img.style.display = "block";
-        img.style.margin = "0 auto";
-        container.appendChild(img);
-      } else {
-        // Show as <iframe>
-        const iframe = document.createElement("iframe");
-        iframe.src = url;
-        iframe.style.width = "100%";
-        iframe.style.height = iframeHeight; // controlled by attribute
-        iframe.style.border = "none";
-        iframe.style.borderRadius = "12px";
-        container.appendChild(iframe);
-      }
-    } catch (err) {
-      container.innerHTML = `<p style="color:red;">Error loading content: ${url}</p>`;
+    // Auto resize height if requested
+    if (autoResize) {
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "resize-iframe" && event.data.height) {
+          iframe.style.height = event.data.height + "px";
+        }
+      });
     }
   }
 }
 
-customElements.define("locked-image", LockedImag
+customElements.define("locked-image", LockedImage);
