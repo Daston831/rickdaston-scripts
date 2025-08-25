@@ -12,7 +12,7 @@ class LockedImage extends HTMLElement {
     const now = Date.now();
     const lockUntil = localStorage.getItem("lockedImageUntil");
 
-    // If still locked → always show final
+    // If locked → show final page immediately
     if (lockUntil && now < parseInt(lockUntil, 10)) {
       this.showFinal();
     } else {
@@ -33,11 +33,8 @@ class LockedImage extends HTMLElement {
   }
 
   showFinal() {
-    this.innerHTML = `<img src="${this.finalUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+    this.innerHTML = `<iframe src="${this.finalUrl}" style="width:100%;height:600px;border:none;display:block;margin:0 auto;"></iframe>`;
   }
 }
 
-customElements.define("locked-image", LockedImage);
-}
-
-customElements.define("locked-image", LockedImage);
+customElements.define("locked-image", LockedImage
