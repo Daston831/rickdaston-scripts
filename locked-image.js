@@ -1,41 +1,40 @@
 class LockedImage extends HTMLElement {
   connectedCallback() {
-    const tempUrl = this.getAttribute("temp");
-    const finalUrl = this.getAttribute("final");
-    const KEY_LOCK_UNTIL = "rd_lock_until_v3";
-    const LOCK_MS = 10 * 60 * 1000; // 10 minutes
-    const SWITCH_DELAY_MS = 10 * 1000; // 10 seconds
+    this.tempUrl = this.getAttribute("temp");
+    this.finalUrl = this.getAttribute("final");
+    this.lockTime = 10 * 60 * 1000; // 10 minutes
+    this.tempDuration = 10 * 1000; // 10 seconds
 
-    const frame = document.createElement("iframe");
-    frame.style.width = "100%";
-    frame.style.height = "600px"; // adjust height as needed
-    frame.style.border = "none";
-    this.appendChild(frame);
+    this.loadImage();
+  }
 
-    function now() { return Date.now(); }
-    function getLockUntil() {
-      const raw = localStorage.getItem(KEY_LOCK_UNTIL);
-      return raw ? parseInt(raw, 10) : 0;
-    }
-    function setLockFor(ms) {
-      localStorage.setItem(KEY_LOCK_UNTIL, String(now() + ms));
-    }
-    function showFinal() {
-      frame.src = finalUrl;
-    }
+  loadImage() {
+    const now = Date.now();
+    const lockUntil = localStorage.getItem("lockedImageUntil");
 
-    if (getLockUntil() > now()) {
-      // Still locked → show final immediately
-      showFinal();
+    // If still locked → always show final
+    if (lockUntil && now < parseInt(lockUntil, 10)) {
+      this.showFinal();
     } else {
-      // Not locked → show temp first, then swap after 10s
-      frame.src = tempUrl;
-      setTimeout(() => {
-        showFinal();
-        setLockFor(LOCK_MS);
-      }, SWITCH_DELAY_MS);
+      this.showTemp();
     }
+  }
+
+  showTemp() {
+    this.innerHTML = `<img src="${this.tempUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+
+    setTimeout(() => {
+      this.showFinal();
+
+      // Lock for 10 minutes
+      const lockUntil = Date.now() + this.lockTime;
+      localStorage.setItem("lockedImageUntil", lockUntil.toString());
+    }, this.tempDuration);
+  }
+
+  showFinal() {
+    this.innerHTML = `<img src="${this.finalUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
   }
 }
 
-customElements.define("locked-image", LockedImage);
+customElements.define("locked-image", LockedImage);cked-image", LockedImage);
