@@ -1,40 +1,60 @@
 class LockedImage extends HTMLElement {
   connectedCallback() {
-    this.tempUrl = this.getAttribute("temp");
-    this.finalUrl = this.getAttribute("final");
-    this.lockTime = 10 * 60 * 1000; // 10 minutes
-    this.tempDuration = 10 * 1000; // 10 seconds
+    const tempUrl = this.getAttribute("temp");
+    const finalUrl = this.getAttribute("final");
+    const iframeHeight = this.getAttribute("iframe-height") || "500px"; // default height
 
-    this.loadImage();
-  }
+    const lockKey = "lockedImageTimestamp";
+    const lockDuration = 10 * 60 * 1000; // 10 minutes
 
-  loadImage() {
+    const container = document.createElement("div");
+    container.style.width = "100%";
+    container.style.maxWidth = "600px"; // adjust as needed
+    container.style.margin = "0 auto";
+    this.appendChild(container);
+
     const now = Date.now();
-    const lockUntil = localStorage.getItem("lockedImageUntil");
+    const savedTime = localStorage.getItem(lockKey);
 
-    // If locked → show final page immediately
-    if (lockUntil && now < parseInt(lockUntil, 10)) {
-      this.showFinal();
+    if (savedTime && now - savedTime < lockDuration) {
+      this.loadContent(container, finalUrl, iframeHeight); // locked → show final
     } else {
-      this.showTemp();
+      localStorage.setItem(lockKey, now);
+      this.loadContent(container, tempUrl, iframeHeight); // show temp
+      setTimeout(() => this.loadContent(container, finalUrl, iframeHeight), 10000); // switch after 10s
     }
   }
 
-  showTemp() {
-    this.innerHTML = `<img src="${this.tempUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+  async loadContent(container, url, iframeHeight) {
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      const contentType = response.headers.get("content-type") || "";
 
-    setTimeout(() => {
-      this.showFinal();
+      container.innerHTML = "";
 
-      // Lock for 10 minutes
-      const lockUntil = Date.now() + this.lockTime;
-      localStorage.setItem("lockedImageUntil", lockUntil.toString());
-    }, this.tempDuration);
-  }
-
-  showFinal() {
-    this.innerHTML = `<iframe src="${this.finalUrl}" style="width:100%;height:600px;border:none;display:block;margin:0 auto;"></iframe>`;
+      if (contentType.includes("image")) {
+        // Show as <img>
+        const img = document.createElement("img");
+        img.src = url;
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.margin = "0 auto";
+        container.appendChild(img);
+      } else {
+        // Show as <iframe>
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.style.width = "100%";
+        iframe.style.height = iframeHeight; // controlled by attribute
+        iframe.style.border = "none";
+        iframe.style.borderRadius = "12px";
+        container.appendChild(iframe);
+      }
+    } catch (err) {
+      container.innerHTML = `<p style="color:red;">Error loading content: ${url}</p>`;
+    }
   }
 }
 
-customElements.define("locked-image", LockedImagecked-image", LockedImage);
+customElements.define("locked-image", LockedImag);
