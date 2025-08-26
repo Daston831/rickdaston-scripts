@@ -1,41 +1,31 @@
 class LockedImage extends HTMLElement {
   connectedCallback() {
-    this.tempUrl = this.getAttribute("temp");
-    this.finalUrl = this.getAttribute("final");
-    this.lockTime = 10 * 60 * 1000; // 10 minutes
-    this.tempDuration = 10 * 1000; // 10 seconds
+    const tempUrl = this.getAttribute('temp');
+    const finalUrl = this.getAttribute('final');
+    const lockTime = parseInt(this.getAttribute('locktime')) || 60000;
 
-    this.loadImage();
-  }
+    // Start with temp
+    this.innerHTML = `<iframe src="${tempUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
 
-  loadImage() {
-    const now = Date.now();
-    const lockUntil = localStorage.getItem("lockedImageUntil");
-
-    // If still locked → always show final
-    if (lockUntil && now < parseInt(lockUntil, 10)) {
-      this.showFinal();
-    } else {
-      this.showTemp();
-    }
-  }
-
-  showTemp() {
-    this.innerHTML = `<img src="${this.tempUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
-
+    // After 10 seconds, load final
     setTimeout(() => {
-      this.showFinal();
+      this.innerHTML = `<iframe src="${finalUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
 
-      // Lock for 10 minutes
-      const lockUntil = Date.now() + this.lockTime;
-      localStorage.setItem("lockedImageUntil", lockUntil.toString());
-    }, this.tempDuration);
-  }
+      // Prevent back refresh until lock expires
+      const start = Date.now();
+      const check = () => {
+        if (Date.now() - start < lockTime) {
+          history.pushState(null, '', location.href);
+        }
+      };
+      window.addEventListener('popstate', check);
 
-  showFinal() {
-    this.innerHTML = `<img src="${this.finalUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
+      // Unlock after lockTime
+      setTimeout(() => {
+        window.removeEventListener('popstate', check);
+      }, lockTime);
+
+    }, 10000); // 10 seconds
   }
 }
-
-customElements.define("locked-image", LockedImage);
-
+customElements.define('locked-image', LockedImage);
