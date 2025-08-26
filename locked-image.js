@@ -1,52 +1,41 @@
 class LockedImage extends HTMLElement {
   connectedCallback() {
-    const tempUrl = this.getAttribute("temp");
-    const finalUrl = this.getAttribute("final");
-    const autoResize = this.hasAttribute("auto-resize");
-    const lockKey = "locked-image-unlock-time";
-    const lockDuration = 10 * 60 * 1000; // 10 minutes
+    this.tempUrl = this.getAttribute("temp");
+    this.finalUrl = this.getAttribute("final");
+    this.lockTime = 10 * 60 * 1000; // 10 minutes
+    this.tempDuration = 10 * 1000; // 10 seconds
 
+    this.loadImage();
+  }
+
+  loadImage() {
     const now = Date.now();
-    const unlockTime = localStorage.getItem(lockKey);
+    const lockUntil = localStorage.getItem("lockedImageUntil");
 
-    // Create container
-    const container = document.createElement("div");
-    container.style.position = "relative";
-    container.style.width = "100%";
-    container.style.height = "100%";
-
-    const iframe = document.createElement("iframe");
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-
-    // Decide whether to show temp or final
-    if (unlockTime && now < parseInt(unlockTime, 10)) {
-      iframe.src = finalUrl;
+    // If still locked → always show final
+    if (lockUntil && now < parseInt(lockUntil, 10)) {
+      this.showFinal();
     } else {
-      iframe.src = tempUrl;
-
-      // Start 10 minute lock countdown
-      localStorage.setItem(lockKey, now + lockDuration);
-
-      // After 10 minutes, switch to final
-      setTimeout(() => {
-        iframe.src = finalUrl;
-      }, lockDuration);
+      this.showTemp();
     }
+  }
 
-    container.appendChild(iframe);
-    this.appendChild(container);
+  showTemp() {
+    this.innerHTML = `<img src="${this.tempUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
 
-    // Auto resize height if requested
-    if (autoResize) {
-      window.addEventListener("message", (event) => {
-        if (event.data.type === "resize-iframe" && event.data.height) {
-          iframe.style.height = event.data.height + "px";
-        }
-      });
-    }
+    setTimeout(() => {
+      this.showFinal();
+
+      // Lock for 10 minutes
+      const lockUntil = Date.now() + this.lockTime;
+      localStorage.setItem("lockedImageUntil", lockUntil.toString());
+    }, this.tempDuration);
+  }
+
+  showFinal() {
+    this.innerHTML = `<img src="${this.finalUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;">`;
   }
 }
 
 customElements.define("locked-image", LockedImage);
+
