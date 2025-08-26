@@ -5,11 +5,11 @@ class LockedImage extends HTMLElement {
     const lockTime = parseInt(this.getAttribute('locktime')) || 60000;
 
     // Start with temp
-    this.innerHTML = `<iframe src="${tempUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
+    this.innerHTML = `<iframe src="${tempUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
 
     // After 10 seconds, load final
     setTimeout(() => {
-      this.innerHTML = `<iframe src="${finalUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
+      this.innerHTML = `<iframe src="${finalUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
 
       // Prevent back refresh until lock expires
       const start = Date.now();
