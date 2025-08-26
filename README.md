@@ -1,4 +1,9 @@
-this.style.display = "block";
+class LockedImage extends HTMLElement {
+  connectedCallback() {
+    const tempUrl = this.getAttribute('temp');
+    const finalUrl = this.getAttribute('final');
+
+    this.style.display = "block";
     this.style.width = "100%";
     this.style.height = "100vh";
 
