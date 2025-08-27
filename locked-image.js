@@ -1,84 +1,51 @@
 class LockedImage extends HTMLElement {
-  connectedCallback() {
-    const temp = this.getAttribute("temp");
-    const final = this.getAttribute("final");
-    const locktime = parseInt(this.getAttribute("locktime") || "60000", 10);
-
-    const container = document.createElement("div");
-    container.style.width = "100%";
-    container.style.height = "100vh";
-    container.style.overflow = "hidden";
-
-    const iframe = document.createElement("iframe");
-    iframe.src = temp;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-
-    container.appendChild(iframe);
-    this.appendChild(container);
-
-    // After 10s, switch to final page
-    setTimeout(() => {
-      iframe.src = final;
-      localStorage.setItem("locked-final", Date.now().toString());
-    }, 10000);
-
-    // Prevent swipe-to-refresh & back nav
-    window.addEventListener("beforeunload", (e) => {
-      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    });
-
-    window.addEventListener("popstate", () => {
-      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
-        history.pushState(null, "", document.URL);
-      }
-    });
-
-    document.addEventListener("touchmove", (e) => {
-      if (e.touches[0].clientY > 50) e.preventDefault();
-    }, { passive: false });
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+        iframe, img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: contain; /* Keeps full content visible */
+          border: none;
+        }
+      </style>
+      <div id="container"></div>
+    `;
   }
-}
-customElements.define("locked-image", LockedImage);
-      return el;
-    };
 
-    // Show temp first
-    container.appendChild(createFrame(tempUrl));
+  connectedCallback() {
+    const tempUrl = this.getAttribute("temp");
+    const finalUrl = this.getAttribute("final");
+    const container = this.shadowRoot.getElementById("container");
 
-    // Switch to final after delay
+    const tempFrame = document.createElement(
+      tempUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "img" : "iframe"
+    );
+    tempFrame.src = tempUrl;
+    container.appendChild(tempFrame);
+
     setTimeout(() => {
       container.innerHTML = "";
-      container.appendChild(createFrame(finalUrl));
-
-      // Lock navigation for lockTime
-      let locked = true;
-      const blockNav = (e) => {
-        if (locked) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-        }
-      };
-      window.addEventListener("popstate", blockNav, true);
-      document.addEventListener("keydown", blockNav, true);
-
-      setTimeout(() => {
-        locked = false;
-        window.removeEventListener("popstate", blockNav, true);
-        document.removeEventListener("keydown", blockNav, true);
-      }, lockTime);
-
-    }, delay);
+      const finalFrame = document.createElement(
+        finalUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "img" : "iframe"
+      );
+      finalFrame.src = finalUrl;
+      container.appendChild(finalFrame);
+    }, 10000); // switch after 10s
   }
 }
-
 customElements.define("locked-image", LockedImage);
 
-// Prevent swipe refresh on mobile
+// Prevent swipe refresh
 document.addEventListener("touchmove", (e) => {
-  if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault();
+  if (e.touches.length > 1 || e.scale && e.scale !== 1) e.preventDefault();
 }, { passive: false });
