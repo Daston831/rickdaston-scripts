@@ -2,18 +2,21 @@ class LockedImage extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
-          height: 100%;
+          display: block;
           overflow: hidden;
+          z-index: 999;
         }
         iframe, img {
-          display: block;
           width: 100%;
-          height: 100%;
+          display: block;
           border: none;
         }
       </style>
@@ -24,34 +27,35 @@ class LockedImage extends HTMLElement {
   connectedCallback() {
     const tempUrl = this.getAttribute("temp");
     const finalUrl = this.getAttribute("final");
-    const mode = this.getAttribute("mode") || "contain";
-    const delay = parseInt(this.getAttribute("delay")) || 10000; // default 10s
-    const lockTime = parseInt(this.getAttribute("lock")) || 60000; // default 60s
+    const mode = this.getAttribute("mode") || "cover";
+    const delay = parseInt(this.getAttribute("delay")) || 10000;
+    const lockTime = parseInt(this.getAttribute("lock")) || 60000;
 
     const container = this.shadowRoot.getElementById("container");
 
-    const applyMode = (el) => {
-      if (el.tagName === "IMG") {
-        el.style.objectFit = mode;
-      }
+    // Detect Wix header height dynamically
+    const header = document.querySelector("header, [data-testid='site-header']");
+    const headerHeight = header ? header.offsetHeight : 0;
+    this.style.top = headerHeight + "px";
+    this.style.height = `calc(100vh - ${headerHeight}px)`;
+
+    const createFrame = (url) => {
+      const el = url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? document.createElement("img") : document.createElement("iframe");
+      el.src = url;
+      el.style.height = "100%";
+      if (el.tagName === "IMG") el.style.objectFit = mode;
       return el;
     };
 
-    const tempFrame = document.createElement(
-      tempUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "img" : "iframe"
-    );
-    tempFrame.src = tempUrl;
-    container.appendChild(applyMode(tempFrame));
+    // Show temp first
+    container.appendChild(createFrame(tempUrl));
 
+    // Switch to final after delay
     setTimeout(() => {
       container.innerHTML = "";
-      const finalFrame = document.createElement(
-        finalUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "img" : "iframe"
-      );
-      finalFrame.src = finalUrl;
-      container.appendChild(applyMode(finalFrame));
+      container.appendChild(createFrame(finalUrl));
 
-      // Disable back/refresh while locked
+      // Lock navigation for lockTime
       let locked = true;
       const blockNav = (e) => {
         if (locked) {
@@ -71,25 +75,10 @@ class LockedImage extends HTMLElement {
     }, delay);
   }
 }
+
 customElements.define("locked-image", LockedImage);
 
 // Prevent swipe refresh on mobile
 document.addEventListener("touchmove", (e) => {
-  if (e.touches.length > 1 || (e.scale && e.scale !== 1)) {
-    e.preventDefault();
-  }
-}, { passive: false });lt();
+  if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault();
 }, { passive: false });
-// Force full width + height scaling
-const style = document.createElement("style");
-style.textContent = `
-  locked-image, 
-  locked-image iframe, 
-  locked-image img {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-    object-fit: cover;
-  }
-`;
-document.head.appendChild(style);
