@@ -12,7 +12,7 @@ class LockedImage extends HTMLElement {
     const iframe = document.createElement("iframe");
     iframe.src = temp;
     iframe.style.width = "100%";
-    iframe.style.height = "100vh";
+    iframe.style.height = "100%";
     iframe.style.border = "none";
 
     container.appendChild(iframe);
