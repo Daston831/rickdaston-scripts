@@ -1,49 +1,49 @@
 class LockedImage extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          display: block;
-          overflow: hidden;
-          z-index: 999;
-        }
-        iframe, img {
-          width: 100%;
-          display: block;
-          border: none;
-        }
-      </style>
-      <div id="container"></div>
-    `;
-  }
-
   connectedCallback() {
-    const tempUrl = this.getAttribute("temp");
-    const finalUrl = this.getAttribute("final");
-    const mode = this.getAttribute("mode") || "cover";
-    const delay = parseInt(this.getAttribute("delay")) || 10000;
-    const lockTime = parseInt(this.getAttribute("lock")) || 60000;
+    const temp = this.getAttribute("temp");
+    const final = this.getAttribute("final");
+    const locktime = parseInt(this.getAttribute("locktime") || "60000", 10);
 
-    const container = this.shadowRoot.getElementById("container");
+    const container = document.createElement("div");
+    container.style.width = "100%";
+    container.style.height = "100vh";
+    container.style.overflow = "hidden";
 
-    // Detect Wix header height dynamically
-    const header = document.querySelector("header, [data-testid='site-header']");
-    const headerHeight = header ? header.offsetHeight : 0;
-    this.style.top = headerHeight + "px";
-    this.style.height = `calc(100vh - ${headerHeight}px)`;
+    const iframe = document.createElement("iframe");
+    iframe.src = temp;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
 
-    const createFrame = (url) => {
-      const el = url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? document.createElement("img") : document.createElement("iframe");
-      el.src = url;
-      el.style.height = "100%";
-      if (el.tagName === "IMG") el.style.objectFit = mode;
+    container.appendChild(iframe);
+    this.appendChild(container);
+
+    // After 10s, switch to final page
+    setTimeout(() => {
+      iframe.src = final;
+      localStorage.setItem("locked-final", Date.now().toString());
+    }, 10000);
+
+    // Prevent swipe-to-refresh & back nav
+    window.addEventListener("beforeunload", (e) => {
+      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
+
+    window.addEventListener("popstate", () => {
+      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
+        history.pushState(null, "", document.URL);
+      }
+    });
+
+    document.addEventListener("touchmove", (e) => {
+      if (e.touches[0].clientY > 50) e.preventDefault();
+    }, { passive: false });
+  }
+}
+customElements.define("locked-image", LockedImage);
       return el;
     };
 
