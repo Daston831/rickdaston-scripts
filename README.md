@@ -80,3 +80,16 @@ document.addEventListener("touchmove", (e) => {
   }
 }, { passive: false });lt();
 }, { passive: false });
+// Force full width + height scaling
+const style = document.createElement("style");
+style.textContent = `
+  locked-image, 
+  locked-image iframe, 
+  locked-image img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    object-fit: cover;
+  }
+`;
+document.head.appendChild(style);
