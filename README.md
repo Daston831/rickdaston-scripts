@@ -1,40 +1,46 @@
 class LockedImage extends HTMLElement {
   connectedCallback() {
-    const tempUrl = this.getAttribute('temp');
-    const finalUrl = this.getAttribute('final');
+    const temp = this.getAttribute("temp");
+    const final = this.getAttribute("final");
+    const locktime = parseInt(this.getAttribute("locktime") || "60000", 10);
 
-    this.style.display = "block";
-    this.style.width = "100%";
-    this.style.height = "100vh";
+    const container = document.createElement("div");
+    container.style.width = "100%";
+    container.style.height = "100vh";
+    container.style.overflow = "hidden";
 
-    // See if the final page is already locked in
-    const isLocked = localStorage.getItem("locked-final") === "true";
+    const iframe = document.createElement("iframe");
+    iframe.src = temp;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
 
-    if (isLocked) {
-      // Show final only (after a refresh or back nav)
-      this.innerHTML = `<iframe src="${finalUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
-    } else {
-      // First time: show temp
-      this.innerHTML = `<iframe src="${tempUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
-      
-      // After 10s, switch to final
-      setTimeout(() => {
-        this.innerHTML = `<iframe src="${finalUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
-        localStorage.setItem("locked-final", "true");
-      }, 10000); // 10 seconds
-    }
+    container.appendChild(iframe);
+    this.appendChild(container);
 
-    // Prevent back/forward nav
-    history.pushState(null, null, document.URL);
-    window.addEventListener('popstate', () => {
-      history.pushState(null, null, document.URL);
+    // After 10s, switch to final page
+    setTimeout(() => {
+      iframe.src = final;
+      localStorage.setItem("locked-final", Date.now().toString());
+    }, 10000);
+
+    // Prevent swipe-to-refresh & back nav
+    window.addEventListener("beforeunload", (e) => {
+      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
     });
 
-    // Auto-unlock after 60s
-    setTimeout(() => {
-      localStorage.removeItem("locked-final");
-    }, 60000);
+    window.addEventListener("popstate", () => {
+      if (Date.now() - parseInt(localStorage.getItem("locked-final") || "0", 10) < locktime) {
+        history.pushState(null, "", document.URL);
+      }
+    });
+
+    document.addEventListener("touchmove", (e) => {
+      if (e.touches[0].clientY > 50) e.preventDefault();
+    }, { passive: false });
   }
 }
-
-customElements.define('locked-image', LockedImage);
+customElements.define("locked-image", LockedImage);
