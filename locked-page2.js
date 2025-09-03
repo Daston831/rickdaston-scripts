@@ -48,4 +48,4 @@ class LockedPage extends HTMLElement {
   }
 }
 
-customElements.define('locked-page', LockedPage);
+customElements.define('locked-page2', LockedPage2);
