@@ -1,28 +1,43 @@
 class LockedPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
+
+    // Create wrapper to enforce full height
+    const wrapper = document.createElement('div');
+    Object.assign(wrapper.style, {
+      width: "100%",
+      height: "100vh", // full viewport height
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      margin: "0",
+      padding: "0",
+      boxSizing: "border-box"
+    });
+
+    // Create iframe
     this.iframe = document.createElement('iframe');
-    this.iframe.style.width = "100%";
-    this.iframe.style.height = "100%";
-    this.iframe.style.border = "none";
-    this.shadowRoot.appendChild(this.iframe);
+    Object.assign(this.iframe.style, {
+      width: "100%",
+      height: "100%",
+      border: "none"
+    });
+
+    wrapper.appendChild(this.iframe);
+    this.shadowRoot.appendChild(wrapper);
 
     this.startTimer();
   }
 
   startTimer() {
-    // Check if user is in locked period
     const now = Date.now();
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
     if (lockData.until && now < lockData.until) {
-      // Still locked -> force pep2
       this.showPep2();
     } else {
-      // Show pep first
       this.iframe.src = "https://rickdaston.com/pep";
 
-      // After 10 seconds switch & lock for 60
       setTimeout(() => {
         this.showPep2();
         localStorage.setItem("lockedPep", JSON.stringify({
