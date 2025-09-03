@@ -1,4 +1,4 @@
-class LockedPage extends HTMLElement {
+class LockedPage2 extends HTMLElement {
   connectedCallback() {
     // Make shadow root
     this.attachShadow({ mode: 'open' });
