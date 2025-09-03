@@ -2,30 +2,21 @@ class LockedPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
 
-    // Create wrapper to enforce full height
-    const wrapper = document.createElement('div');
-    Object.assign(wrapper.style, {
-      width: "100%",
-      height: "100vh", // full viewport height
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      margin: "0",
-      padding: "0",
-      boxSizing: "border-box"
-    });
-
-    // Create iframe
+    // Create iframe that fills the entire viewport
     this.iframe = document.createElement('iframe');
     Object.assign(this.iframe.style, {
-      width: "100%",
-      height: "100%",
-      border: "none"
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100vw",
+      height: "100vh",
+      border: "none",
+      margin: "0",
+      padding: "0",
+      zIndex: "999999" // ensures it's on top
     });
 
-    wrapper.appendChild(this.iframe);
-    this.shadowRoot.appendChild(wrapper);
-
+    this.shadowRoot.appendChild(this.iframe);
     this.startTimer();
   }
 
@@ -34,10 +25,13 @@ class LockedPage extends HTMLElement {
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
     if (lockData.until && now < lockData.until) {
+      // Still locked -> force pep2
       this.showPep2();
     } else {
+      // Show pep first
       this.iframe.src = "https://rickdaston.com/pep";
 
+      // After 10 seconds switch & lock for 60
       setTimeout(() => {
         this.showPep2();
         localStorage.setItem("lockedPep", JSON.stringify({
