@@ -20,7 +20,7 @@ class LockedPage extends HTMLElement {
       this.showPep2();
     } else {
       // Show pep first
-      this.iframe.src = "https://rickdaston.com/pep";
+      this.iframe.src = "https://rickdaston.com/copy-2-of-message";
 
       // After 10 seconds switch & lock for 60
       setTimeout(() => {
