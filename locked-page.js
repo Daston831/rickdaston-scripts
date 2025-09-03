@@ -1,7 +1,7 @@
 class LockedPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
-    this.iframe = document.createElement('iframe');<center>
+    this.iframe = document.createElement('iframe');
     this.iframe.style.width = "100%";
     this.iframe.style.height = "100%";
     this.iframe.style.border = "none";
