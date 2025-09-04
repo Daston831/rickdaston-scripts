@@ -23,24 +23,25 @@ class LockedPage extends HTMLElement {
 
   startTimer() {
     const now = Date.now();
-    const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
+    const lockData = JSON.parse(sessionStorage.getItem("lockedPep") || "{}");
 
-    if (lockData.shownOnce) {
-      // Temp page already shown → go straight to pep2
+    if (lockData.shownOnce && lockData.until && now < lockData.until) {
+      // Locked → go straight to pep2
       this.showPep2();
     } else {
-      // Mark temp page as shown immediately
-      localStorage.setItem("lockedPep", JSON.stringify({
+      // Show pep (only once per session)
+      sessionStorage.setItem("lockedPep", JSON.stringify({
         shownOnce: true
       }));
 
-      // Show pep for 10s, then lock to pep2
       this.iframe.src = "https://rickdaston.com/pep";
+
+      // After 10s → switch to pep2 + set 1-minute lock
       setTimeout(() => {
         this.showPep2();
-        localStorage.setItem("lockedPep", JSON.stringify({
+        sessionStorage.setItem("lockedPep", JSON.stringify({
           shownOnce: true,
-          until: Date.now() + 600000 // lock 10 minutes
+          until: Date.now() + 60000 // lock 1 minute
         }));
       }, 10000);
     }
@@ -53,10 +54,7 @@ class LockedPage extends HTMLElement {
   preventBackButton() {
     history.pushState(null, "", location.href);
     window.addEventListener("popstate", () => {
-      // Trap again so user can't escape
       history.pushState(null, "", location.href);
-
-      // Always redirect to sadle4.jpg
       window.location.replace("https://www.rickdaston.com/sadle4.jpg");
     });
   }
