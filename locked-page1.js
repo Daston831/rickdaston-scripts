@@ -18,25 +18,30 @@ class LockedPage extends HTMLElement {
 
     this.shadowRoot.appendChild(this.iframe);
     this.startTimer();
+
+    // Prevent back button → redirect to sadle4.jpg
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", () => {
+      window.location.replace("https://www.rickdaston.com/sadle4.jpg");
+    });
   }
 
   startTimer() {
     const now = Date.now();
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
-    if (lockData.shownOnce) {
-      // Temp page was already shown once → always show pep2
+    if (lockData.until && now < lockData.until) {
+      // Still locked → force pep2
       this.showPep2();
     } else {
-      // Show temp page (pep) only once
+      // Show pep first
       this.iframe.src = "https://rickdaston.com/pep";
 
-      // After 10 seconds → switch to pep2 + set 10min lock
+      // After 10 seconds switch & lock for 10 minutes
       setTimeout(() => {
         this.showPep2();
         localStorage.setItem("lockedPep", JSON.stringify({
-          shownOnce: true,
-          until: Date.now() + 600000 // lock 10 minutes (600k ms)
+          until: Date.now() + 600000 // lock 10 minutes
         }));
       }, 10000);
     }
