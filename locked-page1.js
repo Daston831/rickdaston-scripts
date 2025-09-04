@@ -13,17 +13,14 @@ class LockedPage extends HTMLElement {
       border: "none",
       margin: "0",
       padding: "0",
-      zIndex: "999999" // ensures it's on top
+      zIndex: "999999"
     });
 
     this.shadowRoot.appendChild(this.iframe);
     this.startTimer();
 
-    // Prevent back button → redirect to sadle4.jpg
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", () => {
-      window.location.replace("https://www.rickdaston.com/sadle4.jpg");
-    });
+    // Block back button → redirect
+    this.preventBackButton();
   }
 
   startTimer() {
@@ -31,13 +28,9 @@ class LockedPage extends HTMLElement {
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
     if (lockData.until && now < lockData.until) {
-      // Still locked → force pep2
       this.showPep2();
     } else {
-      // Show pep first
       this.iframe.src = "https://rickdaston.com/pep";
-
-      // After 10 seconds switch & lock for 10 minutes
       setTimeout(() => {
         this.showPep2();
         localStorage.setItem("lockedPep", JSON.stringify({
@@ -50,6 +43,20 @@ class LockedPage extends HTMLElement {
   showPep2() {
     this.iframe.src = "https://rickdaston.com/pep2";
   }
+
+  preventBackButton() {
+    // Add a dummy history state
+    history.pushState(null, "", location.href);
+
+    window.addEventListener("popstate", () => {
+      // Re-push state to trap user in place
+      history.pushState(null, "", location.href);
+
+      // Redirect to sadle4.jpg
+      window.location.replace("https://www.rickdaston.com/sadle4.jpg");
+    });
+  }
 }
 
+customElements.define('locked-page', LockedPage);
 customElements.define('locked-page', LockedPage);
