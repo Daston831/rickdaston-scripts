@@ -55,7 +55,7 @@ class LockedPage extends HTMLElement {
     history.pushState(null, "", location.href);
     window.addEventListener("popstate", () => {
       history.pushState(null, "", location.href);
-      window.location.replace("https://www.rickdaston.com/sadie4-jpg");
+      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
     });
   }
 }
