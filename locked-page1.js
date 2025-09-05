@@ -1,57 +1,41 @@
 class LockedPage extends HTMLElement {
   connectedCallback() {
     // ----- CONFIGURATION -----
-    // Set lock duration here (in milliseconds)
-    // 1 minute = 60000, 10 minutes = 600000
-    const LOCK_DURATION = 60000; // Change to 600000 for production
+    const LOCK_DURATION = 60000; // 1 minute for testing, 600000 = 10 minutes for production
+    const PEP_URL = "https://rickdaston.com/pep"; 
+    const LOCKED_URL = "https://www.rickdaston.com/sadle4-jpg"; 
+    const PEP_DISPLAY_TIME = 10000; // 10 seconds
     // --------------------------
 
     const now = Date.now();
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
-    // If lock active → immediately redirect to sadle4-jpg
+    // If lock is active → redirect immediately to locked page
     if (lockData.until && now < lockData.until) {
-      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
-      return; // Stop further execution
+      window.location.replace(LOCKED_URL);
+      return; // stop execution
     }
 
-    // Lock not active → proceed to show pep
-    this.attachShadow({ mode: 'open' });
+    // No active lock → show pep for 10 seconds, then lock and redirect
+    // Use top-level page for pep
+    const pepWindow = window.open(PEP_URL, "_self"); 
 
-    // Create full-screen iframe
-    this.iframe = document.createElement('iframe');
-    Object.assign(this.iframe.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100vw",
-      height: "100vh",
-      border: "none",
-      margin: "0",
-      padding: "0",
-      zIndex: "999999"
-    });
-    this.shadowRoot.appendChild(this.iframe);
-
-    // Load temporary pep page
-    this.iframe.src = "https://rickdaston.com/pep";
-
-    // After 10 seconds → redirect to sadle4-jpg and set lock
     setTimeout(() => {
+      // Set lock
       localStorage.setItem("lockedPep", JSON.stringify({
         until: Date.now() + LOCK_DURATION
       }));
-      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
-    }, 10000);
+      // Redirect to locked page
+      window.location.replace(LOCKED_URL);
+    }, PEP_DISPLAY_TIME);
 
-    // Trap back button to force redirect to sadle4-jpg
+    // Trap back button while on pep3
     history.pushState(null, "", location.href);
     window.addEventListener("popstate", () => {
       history.pushState(null, "", location.href);
-      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
+      window.location.replace(LOCKED_URL);
     });
   }
 }
 
-// Define the custom element
 customElements.define('locked-page', LockedPage);
