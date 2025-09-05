@@ -2,7 +2,7 @@ class LockedPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
 
-    // Create iframe that fills the viewport
+    // Create iframe fullscreen
     this.iframe = document.createElement('iframe');
     Object.assign(this.iframe.style, {
       position: "fixed",
@@ -26,15 +26,15 @@ class LockedPage extends HTMLElement {
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
     if (lockData.until && now < lockData.until) {
-      // Still locked → always show pep2
-      this.showPep2();
+      // Still locked → always show sadle4-jpg
+      this.showSadle4();
     } else {
-      // Show pep once
+      // Show pep first
       this.iframe.src = "https://rickdaston.com/pep";
 
-      // After 10 seconds → switch to pep2 and lock for 1 minute
+      // After 10 seconds → switch to sadle4-jpg and lock for 1 minute
       setTimeout(() => {
-        this.showPep2();
+        this.showSadle4();
         localStorage.setItem("lockedPep", JSON.stringify({
           until: Date.now() + 60000 // 1 minute lock for testing
         }));
@@ -42,8 +42,8 @@ class LockedPage extends HTMLElement {
     }
   }
 
-  showPep2() {
-    this.iframe.src = "https://rickdaston.com/pep2";
+  showSadle4() {
+    this.iframe.src = "https://www.rickdaston.com/sadle4-jpg";
   }
 
   preventBackButton() {
@@ -60,5 +60,6 @@ class LockedPage extends HTMLElement {
   }
 }
 
+customElements.define('locked-page', LockedPage);
 customElements.define('locked-page', LockedPage);
 customElements.define('locked-page', LockedPage);
