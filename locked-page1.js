@@ -1,38 +1,59 @@
-class LockedPage1 extends HTMLElement {
+class LockedPage extends HTMLElement {
   connectedCallback() {
-    // ----- CONFIGURATION -----
-    const LOCK_DURATION = 60000; // 1 minute for testing
-    const FINAL_PAGE = "https://www.rickdaston.com/sadle4-jpg"; // final story page
-    const PEP_DISPLAY_TIME = 10000; // 10 seconds
-    // --------------------------
+    this.attachShadow({ mode: 'open' });
 
+    this.iframe = document.createElement('iframe');
+    Object.assign(this.iframe.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100vw",
+      height: "100vh",
+      border: "none",
+      margin: "0",
+      padding: "0",
+      zIndex: "999999"
+    });
+
+    this.shadowRoot.appendChild(this.iframe);
+    this.startTimer();
+  }
+
+  startTimer() {
     const now = Date.now();
     const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
-    // If lock active → go straight to final page
+    // If already locked → show Sadle4
     if (lockData.until && now < lockData.until) {
-      window.location.replace(FINAL_PAGE);
+      this.showSadle4();
       return;
     }
 
-    // No active lock → start 10-second timer
-    setTimeout(() => {
-      // Set lock
+    // If first time OR timer already started
+    if (!lockData.start) {
+      // Store when Pep started
       localStorage.setItem("lockedPep", JSON.stringify({
-        until: Date.now() + LOCK_DURATION
+        start: now,
+        until: now + 15 * 60 * 1000 // lock for 15 minutes
       }));
-      // Redirect to final story page
-      window.location.replace(FINAL_PAGE);
-    }, PEP_DISPLAY_TIME);
+      this.iframe.src = "https://rickdaston.com/pep";
+    } else {
+      // We are mid-session, check elapsed
+      const elapsed = now - lockData.start;
+      if (elapsed < 10000) {
+        // Still within the original 10s window
+        this.iframe.src = "https://rickdaston.com/pep";
+        setTimeout(() => this.showSadle4(), 10000 - elapsed);
+      } else {
+        // Already past the window → go straight to Sadle4
+        this.showSadle4();
+      }
+    }
+  }
 
-    // Trap back button to always go to final page
-    history.pushState(null, "", location.href);
-    window.addEventListener("popstate", () => {
-      history.pushState(null, "", location.href);
-      window.location.replace(FINAL_PAGE);
-    });
+  showSadle4() {
+    this.iframe.src = "https://rickdaston.com/sadle4-jpg";
   }
 }
 
-// Register the custom element
-customElements.define('locked-page1', LockedPage1);
+customElements.define('locked-page1', LockedPage);
