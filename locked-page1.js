@@ -17,7 +17,11 @@ class LockedPage extends HTMLElement {
     });
 
     this.shadowRoot.appendChild(this.iframe);
+
+    // Start lock/timer logic
     this.startTimer();
+
+    // Block back button immediately
     this.preventBackButton();
   }
 
@@ -26,17 +30,17 @@ class LockedPage extends HTMLElement {
     const lockData = JSON.parse(sessionStorage.getItem("lockedPep") || "{}");
 
     if (lockData.shownOnce && lockData.until && now < lockData.until) {
-      // Locked → go straight to pep2
+      // Still locked → always show pep2
       this.showPep2();
     } else {
-      // Show pep (only once per session)
+      // Show pep only once per session
       sessionStorage.setItem("lockedPep", JSON.stringify({
         shownOnce: true
       }));
 
-      this.iframe.src = "https://www.rickdaston.com/pep";
+      this.iframe.src = "https://rickdaston.com/pep";
 
-      // After 10s → switch to pep2 + set 1-minute lock
+      // After 10s → switch to pep2 + set 1-min lock
       setTimeout(() => {
         this.showPep2();
         sessionStorage.setItem("lockedPep", JSON.stringify({
@@ -48,13 +52,18 @@ class LockedPage extends HTMLElement {
   }
 
   showPep2() {
-    this.iframe.src = "https://www.rickdaston.com/pep2";
+    this.iframe.src = "https://rickdaston.com/pep2";
   }
 
   preventBackButton() {
+    // Push dummy state so "back" won't leave the page
     history.pushState(null, "", location.href);
+
     window.addEventListener("popstate", () => {
+      // Re-push dummy state
       history.pushState(null, "", location.href);
+
+      // Always redirect to sadle4-jpg
       window.location.replace("https://www.rickdaston.com/sadle4-jpg");
     });
   }
