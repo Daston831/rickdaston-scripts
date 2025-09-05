@@ -1,8 +1,24 @@
 class LockedPage extends HTMLElement {
   connectedCallback() {
+    // ----- CONFIGURATION -----
+    // Set lock duration here (in milliseconds)
+    // 1 minute = 60000, 10 minutes = 600000
+    const LOCK_DURATION = 60000; // Change to 600000 for production
+    // --------------------------
+
+    const now = Date.now();
+    const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
+
+    // If lock active → immediately redirect to sadle4-jpg
+    if (lockData.until && now < lockData.until) {
+      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
+      return; // Stop further execution
+    }
+
+    // Lock not active → proceed to show pep
     this.attachShadow({ mode: 'open' });
 
-    // Create iframe fullscreen
+    // Create full-screen iframe
     this.iframe = document.createElement('iframe');
     Object.assign(this.iframe.style, {
       position: "fixed",
@@ -17,49 +33,25 @@ class LockedPage extends HTMLElement {
     });
     this.shadowRoot.appendChild(this.iframe);
 
-    this.startTimer();
-    this.preventBackButton();
-  }
+    // Load temporary pep page
+    this.iframe.src = "https://rickdaston.com/pep";
 
-  startTimer() {
-    const now = Date.now();
-    const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
+    // After 10 seconds → redirect to sadle4-jpg and set lock
+    setTimeout(() => {
+      localStorage.setItem("lockedPep", JSON.stringify({
+        until: Date.now() + LOCK_DURATION
+      }));
+      window.location.replace("https://www.rickdaston.com/sadle4-jpg");
+    }, 10000);
 
-    if (lockData.until && now < lockData.until) {
-      // Still locked → always show sadle4-jpg
-      this.showSadle4();
-    } else {
-      // Show pep first
-      this.iframe.src = "https://rickdaston.com/pep";
-
-      // After 10 seconds → switch to sadle4-jpg and lock for 1 minute
-      setTimeout(() => {
-        this.showSadle4();
-        localStorage.setItem("lockedPep", JSON.stringify({
-          until: Date.now() + 60000 // 1 minute lock for testing
-        }));
-      }, 10000);
-    }
-  }
-
-  showSadle4() {
-    this.iframe.src = "https://www.rickdaston.com/sadle4-jpg";
-  }
-
-  preventBackButton() {
-    // Push dummy state so "back" won't leave the page
+    // Trap back button to force redirect to sadle4-jpg
     history.pushState(null, "", location.href);
-
     window.addEventListener("popstate", () => {
-      // Re-push dummy state
       history.pushState(null, "", location.href);
-
-      // Redirect browser immediately to static lock page
       window.location.replace("https://www.rickdaston.com/sadle4-jpg");
     });
   }
 }
 
-customElements.define('locked-page', LockedPage);
-customElements.define('locked-page', LockedPage);
+// Define the custom element
 customElements.define('locked-page', LockedPage);
