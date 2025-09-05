@@ -36,7 +36,7 @@ class LockedPage extends HTMLElement {
       setTimeout(() => {
         this.showPep2();
         localStorage.setItem("lockedPep", JSON.stringify({
-          until: Date.now() + 60000 // 1 minute lock
+          until: Date.now() + 60000 // 1 minute lock for testing
         }));
       }, 10000);
     }
@@ -54,11 +54,11 @@ class LockedPage extends HTMLElement {
       // Re-push dummy state
       history.pushState(null, "", location.href);
 
-      // Force both iframe + browser to sadle4-jpg
-      this.iframe.src = "https://www.rickdaston.com/sadle4-jpg";
+      // Redirect browser immediately to static lock page
       window.location.replace("https://www.rickdaston.com/sadle4-jpg");
     });
   }
 }
 
+customElements.define('locked-page', LockedPage);
 customElements.define('locked-page', LockedPage);
