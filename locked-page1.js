@@ -34,7 +34,7 @@ class LockedPage extends HTMLElement {
         shownOnce: true
       }));
 
-      this.iframe.src = "https://rickdaston.com/pep";
+      this.iframe.src = "https://www.rickdaston.com/pep";
 
       // After 10s → switch to pep2 + set 1-minute lock
       setTimeout(() => {
@@ -48,7 +48,7 @@ class LockedPage extends HTMLElement {
   }
 
   showPep2() {
-    this.iframe.src = "https://rickdaston.com/pep2";
+    this.iframe.src = "https://www.rickdaston.com/pep2";
   }
 
   preventBackButton() {
