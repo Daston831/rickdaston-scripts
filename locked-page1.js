@@ -2,7 +2,7 @@ class LockedPage extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: 'open' });
 
-    // Create iframe fullscreen
+    // Create iframe that fills the viewport
     this.iframe = document.createElement('iframe');
     Object.assign(this.iframe.style, {
       position: "fixed",
@@ -15,37 +15,28 @@ class LockedPage extends HTMLElement {
       padding: "0",
       zIndex: "999999"
     });
-
     this.shadowRoot.appendChild(this.iframe);
 
-    // Start lock/timer logic
     this.startTimer();
-
-    // Block back button immediately
     this.preventBackButton();
   }
 
   startTimer() {
     const now = Date.now();
-    const lockData = JSON.parse(sessionStorage.getItem("lockedPep") || "{}");
+    const lockData = JSON.parse(localStorage.getItem("lockedPep") || "{}");
 
-    if (lockData.shownOnce && lockData.until && now < lockData.until) {
+    if (lockData.until && now < lockData.until) {
       // Still locked → always show pep2
       this.showPep2();
     } else {
-      // Show pep only once per session
-      sessionStorage.setItem("lockedPep", JSON.stringify({
-        shownOnce: true
-      }));
-
+      // Show pep once
       this.iframe.src = "https://rickdaston.com/pep";
 
-      // After 10s → switch to pep2 + set 1-min lock
+      // After 10 seconds → switch to pep2 and lock for 1 minute
       setTimeout(() => {
         this.showPep2();
-        sessionStorage.setItem("lockedPep", JSON.stringify({
-          shownOnce: true,
-          until: Date.now() + 60000 // lock 1 minute
+        localStorage.setItem("lockedPep", JSON.stringify({
+          until: Date.now() + 60000 // 1 minute lock
         }));
       }, 10000);
     }
@@ -63,7 +54,8 @@ class LockedPage extends HTMLElement {
       // Re-push dummy state
       history.pushState(null, "", location.href);
 
-      // Always redirect to sadle4-jpg
+      // Force both iframe + browser to sadle4-jpg
+      this.iframe.src = "https://www.rickdaston.com/sadle4-jpg";
       window.location.replace("https://www.rickdaston.com/sadle4-jpg");
     });
   }
