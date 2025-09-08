@@ -16,7 +16,7 @@
     image.style.transformOrigin = "bottom right";
 
     // Initial zoom for 50% visibility
-    let scale = 2; // 50% visible
+    let scale = 3; // 50% visible
     let offsetX = 50, offsetY = 50;
     let lastX = 50, lastY = 50;
     let startDist = 0;
