@@ -15,8 +15,8 @@
     image.style.objectFit = "cover";
     image.style.transformOrigin = "bottom right";
 
-    // Initial zoom for 40% visibility
-    let scale = 3.5; // 40% visible
+    // Initial zoom for 45% visibility
+    let scale = 3.5; // 45% visible
     let offsetX = 0, offsetY = 0;
     let lastX = 0, lastY = 0;
     let startDist = 0;
