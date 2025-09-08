@@ -2,10 +2,12 @@
   const image = document.getElementById("zoomImage");
   if (!image) return;
 
-  let scale = 1; // Start at default (already enlarged via CSS)
+  let scale = 1.5; // initial zoom relative to container
   let lastX = 0, lastY = 0;
   let offsetX = 0, offsetY = 0;
   let startDist = 0;
+
+  image.style.transform = `scale(${scale})`;
 
   function getDistance(t1, t2) {
     const dx = t1.clientX - t2.clientX;
@@ -14,31 +16,27 @@
   }
 
   image.addEventListener("touchstart", e => {
-    if (e.touches.length === 2) {
-      startDist = getDistance(e.touches[0], e.touches[1]);
-    } else if (e.touches.length === 1) {
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
-    }
+    if(e.touches.length === 2) startDist = getDistance(e.touches[0], e.touches[1]);
+    else if(e.touches.length === 1) { lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }
   }, { passive:false });
 
   image.addEventListener("touchmove", e => {
     e.preventDefault();
-    if (e.touches.length === 2) {
+    if(e.touches.length === 2) {
       const newDist = getDistance(e.touches[0], e.touches[1]);
       const delta = newDist / startDist;
       startDist = newDist;
       scale *= delta;
-      if(scale < 1) scale = 1; // don’t shrink below default
-      image.style.width = `${250 * scale}%`;
-    } else if (e.touches.length === 1) {
+      if(scale < 1) scale = 1;
+      image.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
+    } else if(e.touches.length === 1) {
       const dx = e.touches[0].clientX - lastX;
       const dy = e.touches[0].clientY - lastY;
       offsetX += dx;
       offsetY += dy;
       lastX = e.touches[0].clientX;
       lastY = e.touches[0].clientY;
-      image.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      image.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
     }
   }, { passive:false });
 })();
