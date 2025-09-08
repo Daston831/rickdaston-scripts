@@ -17,7 +17,7 @@
 
     // Initial zoom for 50% visibility
     let scale = 2; // 50% visible
-    let offsetX = 5, offsetY = 5;
+    let offsetX = 50, offsetY = 50;
     let lastX = 0, lastY = 0;
     let startDist = 0;
 
