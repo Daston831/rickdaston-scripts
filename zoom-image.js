@@ -17,8 +17,8 @@
 
     // Initial zoom for 50% visibility
     let scale = 3; // 50% visible
-    let offsetX = 50, offsetY = 50;
-    let lastX = 50, lastY = 50;
+    let offsetX = 0, offsetY = 50;
+    let lastX = 0, lastY = 50;
     let startDist = 0;
 
     image.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
